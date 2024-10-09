@@ -51,10 +51,9 @@ object GraphQLSchema {
         }
       ),
       Field("deletePaymentMethod", BooleanType,
-        arguments = Argument("parentId", LongType) :: Argument("method", StringType) :: Nil,
+        arguments = Argument("parentId", LongType) :: Argument("methodId", LongType) :: Nil,
         resolve = ctx => {
-          // Bug: We're using parentId instead of methodId to delete the payment method
-          ctx.ctx.deletePaymentMethod(ctx.arg[Long]("parentId"), ctx.arg[String]("method")).map {
+          ctx.ctx.deletePaymentMethod(ctx.arg[Long]("parentId"), ctx.arg[Long]("methodId")).map {
             case Right(_) => true
             case Left(_) => false
           }
