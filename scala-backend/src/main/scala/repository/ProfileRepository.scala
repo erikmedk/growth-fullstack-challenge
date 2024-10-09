@@ -61,10 +61,10 @@ class ProfileRepository(db: Database)(implicit ec: ExecutionContext) {
   }
 
   def deletePaymentMethod(parentId: Long, methodId: Long): Future[Either[String, Int]] =
-    db.run(paymentMethods.filter(pm => pm.parentId === parentId && pm.id === methodId).delete)
+    db.run(paymentMethods.filter(pm => pm.parentId === parentId && pm.id === methodId && !pm.isActive).delete)
       .map {
         case rowsDeleted if rowsDeleted == 1 => Right(rowsDeleted)
-        case _ => Left(s"No or multiple payment methods deleted with the id $methodId for parent $parentId")
+        case _ => Left(s"No or multiple inactive payment methods deleted with the id $methodId for parent $parentId")
       }
       .recover { case ex => Left(s"Failed to delete payment method: ${ex.getMessage}") }
 }

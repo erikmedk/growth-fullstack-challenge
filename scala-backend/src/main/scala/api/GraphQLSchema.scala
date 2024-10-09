@@ -55,7 +55,9 @@ object GraphQLSchema {
         resolve = ctx => {
           ctx.ctx.deletePaymentMethod(ctx.arg[Long]("parentId"), ctx.arg[Long]("methodId")).map {
             case Right(_) => true
-            case Left(_) => false
+            case Left(msg) => 
+              println(msg)
+              false
           }
         }
       )
