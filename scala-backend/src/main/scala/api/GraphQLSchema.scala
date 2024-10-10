@@ -5,6 +5,7 @@ import repository.ProfileRepository
 import sangria.schema._
 import sangria.macros.derive._
 import scala.concurrent.ExecutionContext
+import java.time.LocalDateTime
 
 object GraphQLSchema {
 
@@ -35,9 +36,17 @@ object GraphQLSchema {
     fields[ProfileRepository, Unit](
       Field("addPaymentMethod", OptionType(PaymentMethodType),
         arguments = 
+          Argument("userId", LongType) ::
           Argument("parentId", LongType) :: Argument("method", StringType) :: 
           Argument("dateCreated", StringType) :: Nil,
         resolve = ctx => {
+          val event = Event(0, 
+            ctx.arg[Long]("userId"), 
+            LocalDateTime.now().toString, 
+            ctx.arg[Long]("parentId"), 
+            s"addPaymentMethod(${ctx.arg[Long]("parentId")}, ${ctx.arg[String]("method")}, ${ctx.arg[String]("dateCreated")})"
+          )
+          ctx.ctx.addEvent(event);
           val newMethod = PaymentMethod(0, 
             ctx.arg[Long]("parentId"), 
             ctx.arg[String]("method"), 
@@ -51,15 +60,31 @@ object GraphQLSchema {
         }
       ),
       Field("setActivePaymentMethod", OptionType(PaymentMethodType),
-        arguments = Argument("parentId", LongType) :: Argument("methodId", LongType) :: Nil,
-        resolve = ctx => ctx.ctx.setActivePaymentMethod(ctx.arg[Long]("parentId"), ctx.arg[Long]("methodId")).map {
-          case Right(method) => Some(method)
-          case Left(_) => None
+        arguments = Argument("userId", LongType) :: Argument("parentId", LongType) :: Argument("methodId", LongType) :: Nil,
+        resolve = ctx => {
+          val event = Event(0, 
+            ctx.arg[Long]("userId"), 
+            LocalDateTime.now().toString, 
+            ctx.arg[Long]("parentId"), 
+            s"setActivePaymentMethod(${ctx.arg[Long]("parentId")}, ${ctx.arg[Long]("methodId")})"
+          )
+          ctx.ctx.addEvent(event);
+          ctx.ctx.setActivePaymentMethod(ctx.arg[Long]("parentId"), ctx.arg[Long]("methodId")).map {
+            case Right(method) => Some(method)
+            case Left(_) => None
+          }
         }
       ),
       Field("deletePaymentMethod", BooleanType,
-        arguments = Argument("parentId", LongType) :: Argument("methodId", LongType) :: Nil,
+        arguments = Argument("userId", LongType) :: Argument("parentId", LongType) :: Argument("methodId", LongType) :: Nil,
         resolve = ctx => {
+          val event = Event(0, 
+            ctx.arg[Long]("userId"), 
+            LocalDateTime.now().toString, 
+            ctx.arg[Long]("parentId"), 
+            s"deletePaymentMethod(${ctx.arg[Long]("parentId")}, ${ctx.arg[Long]("methodId")})"
+          )
+          ctx.ctx.addEvent(event);
           ctx.ctx.deletePaymentMethod(ctx.arg[Long]("parentId"), ctx.arg[Long]("methodId")).map {
             case Right(_) => true
             case Left(msg) => 

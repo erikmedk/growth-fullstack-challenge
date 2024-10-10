@@ -30,9 +30,18 @@ class ProfileRepository(db: Database)(implicit ec: ExecutionContext) {
     def * = (id, parentId, amount, date) <> (Invoice.tupled, Invoice.unapply)
   }
 
+  private class EventLogTable(tag : Tag) extends Table[Event](tag, "event_log") {
+    def id = column[Long]("id", O.PrimaryKey, O.AutoInc)
+    def userId = column[Long]("user_id")
+    def time = column[String]("time")
+    def parentId = column[Long]("parent_id")
+    def payload = column[String]("payload")
+    def * = (id, userId, time, parentId, payload) <> (Event.tupled, Event.unapply)
+  }
   private val parents = TableQuery[ParentsTable]
   private val paymentMethods = TableQuery[PaymentMethodsTable]
   private val invoices = TableQuery[InvoicesTable]
+  private val eventLog = TableQuery[EventLogTable]
 
   def listPaymentMethods(parentId: Long): Future[Seq[PaymentMethod]] =
     db.run(paymentMethods.filter(_.parentId === parentId).result)
@@ -68,4 +77,10 @@ class ProfileRepository(db: Database)(implicit ec: ExecutionContext) {
         case _ => Left(s"No or multiple inactive payment methods deleted with the id $methodId for parent $parentId")
       }
       .recover { case ex => Left(s"Failed to delete payment method: ${ex.getMessage}") }
+
+  def addEvent(event : Event) : Future[Either[String, Event]] =
+    db.run((eventLog returning eventLog.map(_.id)
+      into ((event, id) => event.copy(id = id))) += event)
+      .map(Right(_))
+      .recover { case ex => Left(s"Failed to add event: ${ex.getMessage}") }
 }

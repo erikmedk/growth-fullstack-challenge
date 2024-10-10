@@ -90,8 +90,8 @@ export const GET_PAYMENT_METHODS = gql`
 `;
 
 export const SET_ACTIVE_PAYMENT_METHOD = gql`
-  mutation SetActivePaymentMethod($parentId: Long!, $methodId: Long!) {
-    setActivePaymentMethod(parentId: $parentId, methodId: $methodId) {
+  mutation SetActivePaymentMethod($userId: Long!, $parentId: Long!, $methodId: Long!) {
+    setActivePaymentMethod(userId: $userId, parentId: $parentId, methodId: $methodId) {
       id
       method
       isActive
@@ -100,8 +100,8 @@ export const SET_ACTIVE_PAYMENT_METHOD = gql`
 `;
 
 const ADD_PAYMENT_METHOD = gql`
-  mutation AddPaymentMethod($parentId: Long!, $method: String!, $dateCreated: String!) {
-    addPaymentMethod(parentId: $parentId, method: $method, dateCreated: $dateCreated) {
+  mutation AddPaymentMethod($userId: Long!, $parentId: Long!, $method: String!, $dateCreated: String!) {
+    addPaymentMethod(userId: $userId, parentId: $parentId, method: $method, dateCreated: $dateCreated) {
       id
       method
       isActive
@@ -111,8 +111,8 @@ const ADD_PAYMENT_METHOD = gql`
 `;
 
 const DELETE_PAYMENT_METHOD = gql`
-  mutation DeletePaymentMethod($parentId: Long!, $methodId: Long!) {
-    deletePaymentMethod(parentId: $parentId, methodId: $methodId)
+  mutation DeletePaymentMethod($userId: Long!, $parentId: Long!, $methodId: Long!) {
+    deletePaymentMethod(userId: $userId, parentId: $parentId, methodId: $methodId)
   }
 `;
 
@@ -136,7 +136,7 @@ const PaymentMethods = ({ parentId }: { parentId: number }) => {
 
   const handleActivate = (methodId: number) => {
     setActivePaymentMethod({
-      variables: { parentId, methodId },
+      variables: { userId: parentId, parentId, methodId },
     });
   };
 
@@ -144,7 +144,7 @@ const PaymentMethods = ({ parentId }: { parentId: number }) => {
     e.preventDefault();
     if (newMethod.trim()) {
       addPaymentMethod({
-        variables: { parentId, method: newMethod.trim(), dateCreated: new Date().toLocaleString() },
+        variables: { userId: parentId, parentId, method: newMethod.trim(), dateCreated: new Date().toLocaleString() },
       }).then(() => {
         setNewMethod("");
       });
@@ -153,7 +153,7 @@ const PaymentMethods = ({ parentId }: { parentId: number }) => {
 
   const handleDeleteMethod = (methodId: number) => {
     deletePaymentMethod({
-      variables: { parentId, methodId },
+      variables: { userId: parentId, parentId, methodId },
     });
   };
 
