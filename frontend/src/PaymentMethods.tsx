@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, Fragment } from "react";
 import { gql, useQuery, useMutation } from "@apollo/client";
 import {
   Button,
@@ -50,6 +50,10 @@ const useStyles = makeStyles((theme: Theme) => ({
   inactiveText: {
     color: theme.palette.error.main,
   },
+  infoText: {
+    color: theme.palette.text.secondary,
+    fontSize: "90%",
+  },
   button: {
     backgroundColor: theme.palette.action.hover,
     color: theme.palette.text.primary,
@@ -80,6 +84,7 @@ export const GET_PAYMENT_METHODS = gql`
       id
       method
       isActive
+      dateCreated
     }
   }
 `;
@@ -95,11 +100,12 @@ export const SET_ACTIVE_PAYMENT_METHOD = gql`
 `;
 
 const ADD_PAYMENT_METHOD = gql`
-  mutation AddPaymentMethod($parentId: Long!, $method: String!) {
-    addPaymentMethod(parentId: $parentId, method: $method) {
+  mutation AddPaymentMethod($parentId: Long!, $method: String!, $dateCreated: String!) {
+    addPaymentMethod(parentId: $parentId, method: $method, dateCreated: $dateCreated) {
       id
       method
       isActive
+      dateCreated
     }
   }
 `;
@@ -138,7 +144,7 @@ const PaymentMethods = ({ parentId }: { parentId: number }) => {
     e.preventDefault();
     if (newMethod.trim()) {
       addPaymentMethod({
-        variables: { parentId, method: newMethod.trim() },
+        variables: { parentId, method: newMethod.trim(), dateCreated: new Date().toLocaleString() },
       }).then(() => {
         setNewMethod("");
       });
@@ -187,13 +193,23 @@ const PaymentMethods = ({ parentId }: { parentId: number }) => {
             </ListItemIcon>
             <ListItemText
               primary={method.method}
-              secondary={method.isActive ? "Active" : "Inactive"}
+              secondary={
+                <>
+                  <Typography 
+                    component="span"
+                    className={method.isActive ? classes.activeText: classes.inactiveText}
+                  >
+                    {method.isActive ? "Active" : "Inactive"}
+                  </Typography><br/>
+                  <Typography
+                    component="span"
+                    className={classes.infoText}
+                  >
+                    Created {method.dateCreated || "(unknown)"}
+                  </Typography>
+                </>
+              }
               primaryTypographyProps={{ className: classes.primaryText }}
-              secondaryTypographyProps={{
-                className: method.isActive
-                  ? classes.activeText
-                  : classes.inactiveText,
-              }}
             />
             {!method.isActive && (
               <Button
